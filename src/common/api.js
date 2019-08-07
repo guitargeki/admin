@@ -1,73 +1,88 @@
-const defaults = {
-    baseUrl: 'https://api.guitargeki.com/v1/',
-    queryParams: {
-        limit: 20,
-        page: 1,
-        sort: 'id',
-        reverse: false
+import $RefParser from 'json-schema-ref-parser';
+
+class Api {
+    constructor(baseUrl) {
+        this.baseUrl = baseUrl;
     }
-};
 
-/**
- * 
- * @param {*} queryParams 
- */
-function createQueryString(queryParams = defaults.queryParams) {
-    const queryStrings = [];
+    /**
+     * 
+     * @param {*} queryParams 
+     */
+    createQueryString(queryParams = this.getDefaultQueryParams()) {
+        const queryStrings = [];
 
-    queryStrings.push(`limit=${queryParams.limit}`);
-    queryStrings.push(`offset=${queryParams.limit * (queryParams.page - 1)}`);
-    queryStrings.push(`sort=${queryParams.sort}`);
-    queryStrings.push(`reverse=${queryParams.reverse}`);
+        queryStrings.push(`limit=${queryParams.limit}`);
+        queryStrings.push(`offset=${queryParams.limit * (queryParams.page - 1)}`);
+        queryStrings.push(`sort=${queryParams.sort}`);
+        queryStrings.push(`reverse=${queryParams.reverse}`);
 
-    return `${queryStrings.join('&')}`;
+        if (queryParams.filters) {
+            for (const filter of queryParams.filters) {
+                if (!filter.value) continue;
+                const where = `where=${encodeURI(`${filter.column}${filter.operator}${filter.value} AND`)}`;
+                queryStrings.push(where);
+            }
+        }
+
+        return `${queryStrings.join('&')}`;
+    }
+
+    /**
+     * 
+     */
+    getDefaultQueryParams() {
+        return {
+            limit: 20,
+            page: 1,
+            sort: 'id',
+            reverse: false
+        };
+    }
+
+    /**
+     * 
+     * @param {*} url 
+     */
+    addTrailingSlash(url) {
+        url += url.endsWith('/') ? '' : '/';
+        return url;
+    }
+
+    async getSwagger() {
+        const fetchUrl = `${this.addTrailingSlash(this.baseUrl)}swagger.json`;
+        const response = await fetch(fetchUrl);
+        const data = await response.json();
+        const swagger = await $RefParser.dereference(data);
+        return swagger;
+    }
+
+    /**
+     * 
+     * @param {*} resource 
+     * @param {*} id 
+     * @param {*} baseUrl 
+     */
+    async getOne(resource, id) {
+        const fetchUrl = `${this.addTrailingSlash(this.baseUrl)}${resource}/${id}`;
+        const response = await fetch(fetchUrl);
+        const data = await response.json();
+        return data;
+    }
+
+    /**
+     * 
+     * @param {*} resource 
+     * @param {*} queryParams 
+     * @param {*} baseUrl 
+     */
+    async getList(resource, queryParams = this.getDefaultQueryParams()) {
+        const queryString = this.createQueryString(queryParams);
+        const fetchUrl = `${this.addTrailingSlash(this.baseUrl)}${resource}?${queryString}`;
+        const response = await fetch(fetchUrl);
+        const data = await response.json();
+        return data;
+    }
 }
 
-/**
- * 
- */
-function getDefaultQueryParams() {
-    return defaults.queryParams;
-}
-
-/**
- * 
- * @param {*} url 
- */
-function addTrailingSlash(url) {
-    url += url.endsWith('/') ? '' : '/';
-    return url;
-}
-
-/**
- * 
- * @param {*} resource 
- * @param {*} id 
- * @param {*} baseUrl 
- */
-async function getOne(resource, id, baseUrl = defaults.baseUrl) {
-    const fetchUrl = `${addTrailingSlash(baseUrl)}${resource}/${id}`;
-    const response = await fetch(fetchUrl);
-    const data = await response.json();
-    return data;
-}
-
-/**
- * 
- * @param {*} resource 
- * @param {*} queryParams 
- * @param {*} baseUrl 
- */
-async function getList(resource, queryParams = defaults.queryParams, baseUrl = defaults.baseUrl) {
-    const queryString = createQueryString(queryParams);
-    const fetchUrl = `${addTrailingSlash(baseUrl)}${resource}?${queryString}`;
-    const response = await fetch(fetchUrl);
-    const data = await response.json();
-    return data;
-}
-
-export default {
-    getDefaultQueryParams,
-    getOne,
-    getList
-};
+export default Api;
