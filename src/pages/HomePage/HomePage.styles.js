@@ -7,6 +7,7 @@ export const Container = styled.article`
 export const StyledCard = styled(Card)`
     max-width: 50em;
     margin: auto;
+    line-height: 1.5em;
 `;
 
 export const Logo = styled.img`
