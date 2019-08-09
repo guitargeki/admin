@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { ApiProvider } from 'common/ApiContext';
 import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
-import { GlobalStyle, Container, Content } from './App.styles';
+import { ThemeProvider } from 'styled-components';
+import { GlobalStyle, Wrapper } from './App.styles';
+import theme from 'themes/default';
 
+import { Box } from 'components';
 import Navigation from 'components/Navigation';
-import LoadingPage from 'pages/LoadingPage';
+
 import HomePage from 'pages/HomePage';
-import ResourceListPage from 'pages/ResourceListPage';
+import LoadingPage from 'pages/LoadingPage';
 import NotFoundPage from 'pages/NotFoundPage';
+import ResourceListPage from 'pages/ResourceListPage';
+
 import Api from 'common/Api';
+import * as utility from 'common/utility';
 import logo from 'static/logo-light.png';
 
 const baseUrls = [
@@ -25,14 +31,10 @@ function App() {
     useEffect(() => {
         async function createResources() {
             const swagger = await api.getSwagger();
-            // console.log(swagger);
 
             setResources(swagger.tags.map(e => {
                 const resource = e.name;
-                const label = resource
-                    .split('_')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
+                const label = utility.getFriendlyColumnName(resource);
 
                 const schemas = {};
                 schemas.getList = swagger.paths[`/${resource}`].get.responses['200'].schema;
@@ -51,14 +53,14 @@ function App() {
     }, [api, api.baseUrl]);
 
     return (
-        <ApiProvider value={api}>
-            <Router>
-                <GlobalStyle />
+        <ThemeProvider theme={theme}>
+            <ApiProvider value={api}>
+                <Router>
+                    <GlobalStyle />
 
-                {isLoading ? (
-                    <LoadingPage />
-                ) : (
-                    <Container>
+                    {isLoading && <LoadingPage />}
+
+                    {!isLoading && <Wrapper>
                         <Navigation>
                             <ul>
                                 <li><Link to='/'><img src={logo} alt='Home' /></Link></li>
@@ -68,7 +70,7 @@ function App() {
                             </ul>
                         </Navigation>
 
-                        <Content>
+                        <Box as='main' p='l'>
                             <Switch>
                                 <Route path="/" exact component={HomePage} />
 
@@ -82,11 +84,11 @@ function App() {
 
                                 <Route component={NotFoundPage} />
                             </Switch>
-                        </Content>
-                    </Container>
-                )}
-            </Router>
-        </ApiProvider>
+                        </Box>
+                    </Wrapper>}
+                </Router>
+            </ApiProvider>
+        </ThemeProvider>
     );
 }
 

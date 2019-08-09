@@ -1,13 +1,14 @@
 import React from 'react';
-import { Container } from './LoadingPage.styles';
-import Loader from 'components/Loader';
+import { Flex, Loader, Page } from 'components';
+import { siteTitle } from 'common/labels';
 
 function LoadingPage() {
     return (
-        <Container>
-            <Loader />
-            <p>Loading schemas...</p>
-        </Container>
+        <Page title={siteTitle}>
+            <Flex alignItems='center' justifyContent='center' width='100vw' height='100vh'>
+                <Loader active>Loading schemas...</Loader>
+            </Flex>
+        </Page>
     );
 }
 

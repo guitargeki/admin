@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import ApiContext from 'common/ApiContext';
 import PropTypes from 'prop-types';
-import { Container, Filters, TableControls } from './ResourceListPage.styles';
-import Card from 'components/Card';
-import Dimmer from 'components/Dimmer';
+import { Box, Button, Card, Dimmer, Flex, Input, Loader, Page, Pagination, Segment, Select } from 'components';
+import { siteTitle } from 'common/labels';
 import Table from 'components/Table';
-import Pagination from 'components/Pagination';
 import { FaSearch, FaPlus, FaTimes } from 'react-icons/fa';
 import Ajv from 'ajv';
+import * as utility from 'common/utility';
 
 const ajv = new Ajv({ coerceTypes: true });
 const maxFilters = 5;
@@ -37,6 +36,49 @@ const stringOperators = [
         value: 'ILIKE'
     }
 ];
+
+const limits = [
+    '5',
+    '10',
+    '15',
+    '20'
+];
+
+function ControlSegment(props) {
+    return (
+        <Segment bg='muted' {...props} />
+    );
+}
+
+function SpacedControls(props) {
+    return (
+        <Flex alignItems='center' justifyContent='space-between' flexWrap='wrap' {...props} />
+    );
+}
+
+function FilterHeaderButton(props) {
+    return (
+        <Segment
+            as={Button}
+            px='m'
+            py='s'
+            borderRadius='s'
+            {...props}
+        />
+    );
+}
+
+function FilterSegment(props) {
+    return (
+        <Segment
+            marginTop='s'
+            px='s'
+            py='xs'
+            borderRadius='s'
+            {...props}
+        />
+    );
+}
 
 function ResourceListPage(props) {
     const { resource } = props;
@@ -150,8 +192,7 @@ function ResourceListPage(props) {
         setFilters(array);
     }
 
-    function onSort(e) {
-        const column = e.target.textContent;
+    function onSort(column) {
         let sort = queryParams.sort;
         let reverse = queryParams.reverse;
 
@@ -169,17 +210,17 @@ function ResourceListPage(props) {
         });
     }
 
-    function onPagePrev() {
+    function onPageChange(newPage) {
         setQueryParams({
             ...queryParams,
-            page: queryParams.page - 1
+            page: newPage
         });
     }
 
-    function onPageNext() {
+    function onLimitChange(e) {
         setQueryParams({
             ...queryParams,
-            page: queryParams.page + 1
+            limit: e.target.value
         });
     }
 
@@ -192,94 +233,115 @@ function ResourceListPage(props) {
         }
     }
 
+    function isColumnUrl(column) {
+        const format = schema[column]['x-format'];
+        if (format && format.uri) return true;
+        return false;
+    }
+
     function PaginationControl() {
-        let showPrev = false;
-        let showNext = false;
-        if (queryParams.page > 1) showPrev = true;
-        if (listData.length >= 20) showNext = true;
-        
         return (
-            <Pagination>
-                {(showPrev) && <button onClick={onPagePrev}>Previous</button>}
-                <span><b>{queryParams.page}</b></span>
-                {(showNext) && <button onClick={onPageNext}>Next</button>}
-            </Pagination>
+            <Pagination
+                page={queryParams.page}
+                onPageChange={onPageChange}
+                isLastPage={(listData.length < queryParams.limit)}
+            />
         );
     }
 
     return (
-        <Container>
+        <Page title={`${resource.label} | ${siteTitle}`}>
+            <>
+                <Card as='article'>
+                    <h2>{resource.label}</h2>
+                    <Segment.Group as='section' vertical>
 
-            <Card>
-                {isLoading && <Dimmer />}
-                <h3>{resource.label}</h3>
+                        <ControlSegment>
+                            <Box as='header'>
+                                <b>Filters&nbsp;</b>
+                                <Segment.Group inline fontSize='xs'>
+                                    <FilterHeaderButton title='Search with filters' onClick={onSearch}><FaSearch /></FilterHeaderButton>
+                                    <FilterHeaderButton title='Add filter' onClick={onFilterAdd}><FaPlus /></FilterHeaderButton>
+                                    <FilterHeaderButton title='Clear filters' onClick={onFilterClear}><FaTimes /></FilterHeaderButton>
+                                </Segment.Group>
+                            </Box>
 
-                <Filters>
-                    <span>
-                        <strong>Filters (Maximum: {maxFilters})</strong>
-                        <button title='Search with filters' onClick={onSearch}><FaSearch /></button>
-                        <button title='Add filter' onClick={onFilterAdd}><FaPlus /></button>
-                        <button title='Clear filters' onClick={onFilterClear}><FaTimes /></button>
-                    </span>
+                            <form onSubmit={onSearch}>
+                                {filters.map((filter, i) => <Flex key={i} alignItems='center' fontSize='xs'>
+                                    <Segment.Group>
+                                        <FilterSegment as={Select} value={filter.column} onChange={(e) => onFilterColumnChange(e, i)}>
+                                            {headers.map(column => <option key={column} value={column}>
+                                                {utility.getFriendlyColumnName(column)}
+                                            </option>)}
+                                        </FilterSegment>
 
-                    <form onSubmit={onSearch}>
-                        {filters.map((filter, i) => <div key={i}>
-                            <span>{i + 1}: </span>
-                            <select value={filter.column} onChange={(e) => onFilterColumnChange(e, i)}>
-                                {headers.map(column => <option key={column} value={column}>
-                                    {column}
-                                </option>)}
-                            </select>
+                                        <FilterSegment as={Select} value={filter.operator} onChange={(e) => onFilterOperatorChange(e, i)}>
+                                            {getOperators(filter.column).map(operator => <option key={operator.label} value={operator.value}>
+                                                {operator.label}
+                                            </option>)}
+                                        </FilterSegment>
 
-                            <select value={filter.operator} onChange={(e) => onFilterOperatorChange(e, i)}>
-                                {getOperators(filter.column).map(operator => <option key={operator.label} value={operator.value}>
-                                    {operator.label}
-                                </option>)}
-                            </select>
+                                        <FilterSegment as={Input} type='text' value={filter.value} onChange={(e) => onFilterValueChange(e, i)} error={filter.error && true} />
+                                        <FilterSegment as={Button} type='button' title='Delete filter' onClick={(e) => onFilterDelete(e, i)}><FaTimes /></FilterSegment>
 
-                            <div className={`filter-input ${(filter.error) ? 'error' : null}`}>
-                                <input type='text' value={filter.value} onChange={(e) => onFilterValueChange(e, i)} />
-                                {filter.error && <label>{filter.error}</label>}
-                            </div>
+                                    </Segment.Group>
+                                    &nbsp;{filter.error && <Box as='i' color='red'>{filter.error}</Box>}
 
-                            <button type="button" title='Delete filter' onClick={(e) => onFilterDelete(e, i)}><FaTimes /></button>
-                        </div>)}
-                        <input type='submit' />
-                    </form>
-                </Filters>
+                                </Flex>)}
+                                <input type='submit' style={{ display: 'none' }} />
+                            </form>
+                        </ControlSegment>
 
-                <TableControls>
-                    <PaginationControl />
-                    <b>Showing {listData.length} items</b>
-                </TableControls>
+                        <ControlSegment>
+                            <SpacedControls>
+                                <b>Showing {listData.length} items</b>
+                                <PaginationControl />
+                            </SpacedControls>
+                        </ControlSegment>
 
-                <Table>
-                    <thead>
-                        <tr>
-                            {headers.map(column => <th
-                                key={column}
-                                onClick={onSort}
-                                className={(column === queryParams.sort) ? (queryParams.reverse) ? 'desc' : 'asc' : null}
-                            >
-                                {column}
-                            </th>)}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {listData.map(row => <tr key={row.id}>
-                            {headers.map(column => <td key={column}>
-                                {row[column]}
-                            </td>)}
-                        </tr>)}
-                    </tbody>
-                </Table>
+                        <Segment>
+                            <Dimmer active={isLoading}><Loader active={isLoading}>Loading data...</Loader></Dimmer>
 
-                <TableControls>
-                    <PaginationControl />
-                </TableControls>
+                            <Table fontSize='s'>
+                                <thead>
+                                    <tr>
+                                        {headers.map(column => <th
+                                            key={column}
+                                            onClick={() => onSort(column)}
+                                            className={(column === queryParams.sort) ? (queryParams.reverse) ? 'desc' : 'asc' : null}
+                                        >
+                                            {utility.getFriendlyColumnName(column)}
+                                        </th>)}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {listData.map(row => <tr key={row.id}>
+                                        {headers.map(column => <td key={column}>
+                                            {(isColumnUrl(column)) ? <a href={row[column]} target='_blank' rel='noopener noreferrer'>{row[column]}</a> : row[column]}
+                                        </td>)}
+                                    </tr>)}
+                                </tbody>
+                            </Table>
+                        </Segment>
 
-            </Card>
-        </Container>
+                        <ControlSegment>
+                            <SpacedControls>
+                                <Box>
+                                    <FilterSegment as={Select} value={queryParams.limit} onChange={(e) => onLimitChange(e)} borderRadius='xs' marginTop='0'>
+                                        {limits.map(limit => <option key={limit} value={limit}>
+                                            {limit}
+                                        </option>)}
+                                    </FilterSegment>
+                                    <span> per page</span>
+                                </Box>
+                                <PaginationControl />
+                            </SpacedControls>
+                        </ControlSegment>
+                    </Segment.Group>
+
+                </Card>
+            </>
+        </Page>
     );
 }
 

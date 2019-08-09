@@ -1,3 +1,14 @@
-import { Container } from './Table.styles';
+import React from 'react';
+import { Wrapper } from './Table.styles';
 
-export default Container;
+function Table(props) {
+    return (
+        <Wrapper
+            as='table'
+            minHeight='tableMinHeight'
+            {...props}
+        />
+    );
+}
+
+export default Table;

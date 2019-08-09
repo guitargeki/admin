@@ -1,3 +1,3 @@
-import { Container } from './Navigation.styles';
+import { Wrapper } from './Navigation.styles';
 
-export default Container;
+export default Wrapper;

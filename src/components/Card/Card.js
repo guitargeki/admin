@@ -1,3 +1,15 @@
-import { Container } from './Card.styles';
+import React from 'react';
+import { Box } from 'components';
 
-export default Container;
+function Card(props) {
+    return (
+        <Box
+            bg='white'
+            p='l'
+            boxShadow={2}
+            {...props}
+        />
+    );
+}
+
+export default Card;

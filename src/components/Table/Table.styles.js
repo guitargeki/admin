@@ -1,44 +1,37 @@
 import styled from 'styled-components';
+import { Box } from 'components';
 
-export const Container = styled.table`
-    display: block;
-    width: 100%;
-    height: 1fr;
-    text-align: left;
-    overflow: auto;
+export const Wrapper = styled(Box)`
     border-collapse: collapse;
-    font-size: 0.8em;
+    text-align: left;
+    display: block;
+    overflow: auto;
 
-    th {
-        background-color: #EEEEEE;
-        font-weight: 600;
-    }
-
-    th.asc:after {
-        content: '▴';
-    }
-
-    th.desc:after {
-        content: '▾';
-    }
-
-    th:hover {
-        filter: brightness(90%);
-        cursor: pointer;
-    }
-
-    tr:hover {
-        background-color: #EEEEEE;
-    }
-
-    th, td {
-        padding: 0.75em;
+    td, th {
+        padding: ${props => props.theme.space.m};
         width: 1%;
     }
 
-    td {
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        border-left: none;
-        border-right: none;
+    th {
+        :hover {
+            color: ${props => props.theme.colors.primary};
+            cursor: pointer;
+        }
+
+        &.asc:after {
+            content: '▴';
+        }
+
+        &.desc:after {
+            content: '▾';
+        }
+    }
+
+    tbody > tr {
+        border-top: ${props => props.theme.borders.default};
+
+        :hover {
+            background-color: ${props => props.theme.colors.muted};
+        }
     }
 `;

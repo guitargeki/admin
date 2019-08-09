@@ -1,9 +1,13 @@
 import React from 'react';
-import Card from 'components/Card';
+import Page from 'components/Page';
+import { siteTitle } from 'common/labels';
+import { Card } from 'components';
 
 function NotFoundPage() {
     return (
-        <Card><p>Page not found!</p></Card>
+        <Page title={`Not Found | ${siteTitle}`}>
+            <Card as='article'><p>Page not found!</p></Card>
+        </Page>
     );
 }
 

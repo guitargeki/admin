@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-export const Container = styled.nav`
+export const Wrapper = styled.nav`
     background-color: #32323D;
     color: white;
     font-size: 0.8em;

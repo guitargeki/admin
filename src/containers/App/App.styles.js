@@ -6,10 +6,11 @@ export const GlobalStyle = createGlobalStyle`
 
     *, *:before, *:after {
         box-sizing: border-box;
+        position: relative;
     }
 
     body {
-        background-color: #EEEEEE;
+        background-color: ${props => props.theme.colors.background};
         margin: 0;
         padding: 0;
     }
@@ -18,23 +19,15 @@ export const GlobalStyle = createGlobalStyle`
     html, body, button, input, textarea, textfield, select {
         font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
     }
-
-    h1, h2, h3, h4, h5, h6 {
-        font-weight: 600;
-    }
 `;
 
-export const Container = styled.div`
+export const Wrapper = styled.div`
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 1fr;
 
-    @media only screen and (min-width: 37em) {
+    @media only screen and (min-width: 44em) {
         grid-template-columns: auto minmax(0, 1fr);
         grid-template-rows: minmax(100vh, auto);
     }
-`;
-
-export const Content = styled.main`
-    margin: 2em;
 `;
