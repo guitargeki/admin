@@ -1,1 +1,0 @@
-export const siteTitle = 'Guitargeki Admin Panel';
