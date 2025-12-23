@@ -4,12 +4,12 @@
   "private": true,
   "dependencies": {
     "ajv": "^6.10.2",
-    "json-schema-ref-parser": "^7.1.0",
+    "json-schema-ref-parser": "^9.0.9",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-icons": "^3.7.0",
     "react-router-dom": "^5.0.1",
-    "react-scripts": "3.0.1",
+    "react-scripts": "5.0.1",
     "styled-components": "^4.3.2",
     "styled-normalize": "^8.0.6",
     "styled-system": "^5.0.20"
